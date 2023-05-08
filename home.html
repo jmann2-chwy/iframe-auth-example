@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body style="text-align: center;">
+
+<div style="border-color: black; border-width: 1px; border-style: dashed; background-color: aliceblue; padding: 4px; width: 400px">
+    <div style="margin-bottom: 4px"><span style="font-size: small; text-decoration: underline">Control Panel</span>
+    </div>
+    <div style="margin-bottom: 4px">
+        <button style="" onclick={rocketChatManager.goToRoom()}>Room</button>
+        <button style="" id="oauthLogin" onclick={rocketChatManager.oauthLogin()}>Login with OAuth</button>
+        <button style="" onclick={rocketChatManager.logout()}>Logout</button>
+    </div>
+</div>
+
+<div style="margin: 4px"></div>
+
+<div style="border-color: black; border-width: 1px; border-style: dashed; background-color: white; padding: 4px; width: 400px">
+    <div id="chartPlaceHolder" style="border-width:0; width: 400px;height: 400px; display: block"></div>
+
+    <iframe id="rcFrame" src="http://192.168.7.183:3000/group/Clinic1/?layout=embedded" title="myframe"
+            style="border-width:0; width: 400px;height: 400px; display: none"></iframe>
+</div>
+
+</body>
+<script>
+    class RocketChatManager {
+        constructor() {
+            this.loginKeyName = 'rocketChatLogin';
+            this.showLoggingIn();
+            window.addEventListener('message', this._handleMessage.bind(this));
+        }
+
+        _loginOnStartup() {
+            const isLoggedIn = window.sessionStorage.getItem(this.loginKeyName);
+
+            if (!isLoggedIn) {
+                this.oauthLogin();
+            }
+        }
+
+        _postServiceCommand(command, service) {
+            this._postToRocketChat({
+                externalCommand: command,
+                service: service
+            });
+        }
+
+        _goTo(path) {
+            this._postToRocketChat({
+                externalCommand: "go",
+                path: path
+            });
+        }
+
+        _postToRocketChat(message) {
+            document.getElementById("rcFrame").contentWindow.postMessage(message, "http://192.168.7.183:3000");
+        }
+
+        goToChannel(channelName) {
+            this._goTo("/channel/" + channelName + "/?layout=embedded");
+        }
+
+        goToRoom() {
+            this.goToChannel("general");
+        }
+
+        oauthLogin() {
+            console.log("Logging in via OAuth")
+            this.showLoggingIn();
+            window.sessionStorage.setItem(this.loginKeyName, 'connected');
+            // this._postServiceCommand('call-custom-oauth-login', 'keycloak');
+            this._postServiceCommand('call-custom-oauth-login', 'auth0');
+            this.goToGeneral();
+        }
+
+        logout() {
+            window.sessionStorage.removeItem(this.loginKeyName);
+            this._postServiceCommand('logout');
+            this.showLoggedOut();
+        }
+
+        showChatWindow() {
+            document.getElementById("chartPlaceHolder").style.display = "none";
+            document.getElementById("rcFrame").style.display = "block";
+        }
+
+        showLoggingIn() {
+            document.getElementById("rcFrame").style.display = "none";
+            let placeHolder = document.getElementById("chartPlaceHolder");
+            placeHolder.style.display = "block";
+            placeHolder.innerHTML = "<div>Logging in, please wait</div>"
+        }
+
+        showLoggedOut() {
+            document.getElementById("rcFrame").style.display = "none";
+            let placeHolder = document.getElementById("chartPlaceHolder");
+            placeHolder.style.display = "block";
+            placeHolder.innerHTML = "<div>Logged Out. Click <a href='javascript:void(0)' onclick='rocketChatManager.oauthLogin()'>here</a> to log in again</div>"
+        }
+
+        _handleMessage(e) {
+
+            //TODO: Remove Log
+            console.log("Handle Message", e.data.eventName, e.data.data);
+
+            switch (e.data.eventName) {
+                case 'startup':
+                    // This timeout seems necessary for login to work after startup
+                    setTimeout(function () {
+                        this._loginOnStartup();
+                    }.bind(this), 1000);
+                    break;
+                case 'Custom_Script_Logged_Out':
+                    this.logout();
+                    break;
+                case 'room-opened':
+                    this.showChatWindow();
+                    break;
+
+                // These messages are called from login.html
+                case 'call-custom-oauth-login':
+                    this.oauthLogin();
+                    break;
+            }
+        }
+    }
+
+    const rocketChatManager = new RocketChatManager();
+
+</script>
+</html>

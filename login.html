@@ -1,0 +1,11 @@
+
+<div style="background-color: white">
+    <button style="margin-bottom: auto;" onclick={oauthLogin()}>Login with OAuth</button>
+</div>
+<script>
+    function oauthLogin() {
+        parent.parent.postMessage({"eventName": "call-custom-oauth-login"},
+            "http://192.168.7.183:3030"
+        );
+    }
+</script>

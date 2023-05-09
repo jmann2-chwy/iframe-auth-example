@@ -4,8 +4,11 @@
 </div>
 <script>
     function oauthLogin() {
-        parent.parent.postMessage({"eventName": "call-custom-oauth-login"},
-            "http://192.168.7.183:3030"
-        );
+        // location.host check consider
+        if (location.port === 3030) {
+            parent.parent.postMessage({eventName: "call-deep-custom-oauth-login"}, "*");
+        } else {
+            parent.postMessage({externalCommand: "call-custom-oauth-login", service: 'petka'}, "*");
+        }
     }
 </script>

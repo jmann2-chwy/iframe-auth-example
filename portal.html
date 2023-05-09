@@ -8,7 +8,8 @@
 </head>
 <body style="text-align: center;">
 
-<div style="border-color: black; border-width: 1px; border-style: dashed; background-color: aliceblue; padding: 4px; width: 400px">
+<!-- Portal UI actions -->
+<!-- <div style="border-color: black; border-width: 1px; border-style: dashed; background-color: aliceblue; padding: 4px; width: 800px">
     <div style="margin-bottom: 4px"><span style="font-size: small; text-decoration: underline">Control Panel</span>
     </div>
     <div style="margin-bottom: 4px">
@@ -16,15 +17,14 @@
         <button style="" id="oauthLogin" onclick={rocketChatManager.oauthLogin()}>Login with OAuth</button>
         <button style="" onclick={rocketChatManager.logout()}>Logout</button>
     </div>
-</div>
+</div> -->
 
 <div style="margin: 4px"></div>
 
-<div style="border-color: black; border-width: 1px; border-style: dashed; background-color: white; padding: 4px; width: 400px">
-    <div id="chartPlaceHolder" style="border-width:0; width: 400px;height: 400px; display: block"></div>
-
-    <iframe id="rcFrame" src="http://192.168.7.183:3000/group/Clinic1/?layout=embedded" title="myframe"
-            style="border-width:0; width: 400px;height: 400px; display: none"></iframe>
+<div style="border-color: black; border-width: 1px; border-style: dashed; background-color: white; padding: 4px; width: 800px">
+    <div id="chartPlaceHolder" style="border-width:0; width: 800px;height: 800px; display: block"></div>
+    <iframe id="rcFrame" src="http://localhost:3000" title="myframe"
+            style="border-width:0; width: 800px;height: 800px; display: none"></iframe>
 </div>
 
 </body>
@@ -41,6 +41,8 @@
 
             if (!isLoggedIn) {
                 this.oauthLogin();
+            } else {
+                this.goToRoom();
             }
         }
 
@@ -59,11 +61,11 @@
         }
 
         _postToRocketChat(message) {
-            document.getElementById("rcFrame").contentWindow.postMessage(message, "http://192.168.7.183:3000");
+            document.getElementById("rcFrame").contentWindow.postMessage(message, "*");
         }
 
         goToChannel(channelName) {
-            this._goTo("/channel/" + channelName + "/?layout=embedded");
+            this._goTo("/channel/" + channelName);
         }
 
         goToRoom() {
@@ -74,14 +76,14 @@
             console.log("Logging in via OAuth")
             this.showLoggingIn();
             window.sessionStorage.setItem(this.loginKeyName, 'connected');
-            // this._postServiceCommand('call-custom-oauth-login', 'keycloak');
-            this._postServiceCommand('call-custom-oauth-login', 'auth0');
-            this.goToGeneral();
+            // this._postToRocketChat({ externalCommand: 'logout' });
+            this._postServiceCommand('call-custom-oauth-login', 'petka');
+            this.goToRoom();
         }
 
         logout() {
             window.sessionStorage.removeItem(this.loginKeyName);
-            this._postServiceCommand('logout');
+            this._postToRocketChat({ externalCommand: 'logout' });
             this.showLoggedOut();
         }
 
@@ -90,6 +92,7 @@
             document.getElementById("rcFrame").style.display = "block";
         }
 
+        // Portal UI actions
         showLoggingIn() {
             document.getElementById("rcFrame").style.display = "none";
             let placeHolder = document.getElementById("chartPlaceHolder");
@@ -124,7 +127,7 @@
                     break;
 
                 // These messages are called from login.html
-                case 'call-custom-oauth-login':
+                case 'call-deep-custom-oauth-login':
                     this.oauthLogin();
                     break;
             }

@@ -1,13 +1,37 @@
 
-<div style="background-color: white">
-    <button style="margin-bottom: auto;" onclick={oauthLogin()}>Login with OAuth</button>
+<div 
+  style="
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%; 
+    height: 100%; 
+  "
+>
+  <button 
+    style="
+      color: #FFFFFF;
+      border: none;
+      background-color: #5A98B1;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 500;
+      font-family: sans-serif;
+    " 
+      onclick={oauthLogin()}
+  >
+    SSO Log In
+  </button>
 </div>
 <script>
     function oauthLogin() {
         // location.host check consider
-        if (location.port === 3030) {
+        if (location.port === 3001) {
+            // 3001 local portal code, rhapsody domain
             parent.parent.postMessage({eventName: "call-deep-custom-oauth-login"}, "*");
         } else {
+            // rocket chat domain
             parent.postMessage({externalCommand: "call-custom-oauth-login", service: 'petka'}, "*");
         }
     }
